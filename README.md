@@ -4,9 +4,10 @@ SchoolBag is an intelligent academic task management application designed to hel
 
 ## 🎯 Project Overview
 
-This project implements **Week 2** and **Week 3** milestones:
+This project implements **Week 2**, **Week 3**, and **Sprint 2** milestones:
 - **Week 2**: Secure authentication system with MongoDB integration
-- **Week 3**: Complete task CRUD operations with calendar visualization
+- **Week 3**: Complete task CRUD operations with calendar visualization  
+- **Sprint 2**: Enhanced user experience with home page, notifications, and rich notes functionality
 
 ## ✨ Features Implemented
 
@@ -24,6 +25,14 @@ This project implements **Week 2** and **Week 3** milestones:
 - ✅ Task status management (pending → in-progress → completed)
 - ✅ Priority levels and task categories
 - ✅ Due date tracking with overdue detection
+
+### Sprint 2 - Enhanced User Experience
+- ✅ **New Home Page**: Todoist-inspired landing page with CTA, benefits, and social proof
+- ✅ **Notifications System**: Real-time notifications with bell icon and dropdown for web
+- ✅ **Push Notifications**: Native mobile push notifications for task due date reminders
+- ✅ **Rich Notes**: Markdown-supported notes with context-aware templates linked to tasks
+- ✅ **Mobile Notes UI**: Slide-up panel for mobile with full Markdown editing support
+- ✅ **Real-time Sync**: Automatic sync of notes between web and mobile platforms (30-second intervals)
 
 ## 🛠 Technology Stack
 
@@ -43,6 +52,7 @@ This project implements **Week 2** and **Week 3** milestones:
 - **date-fns** for date manipulation
 - **Lucide React** for icons
 - **React Toastify** for notifications
+- **Markdown rendering** for rich notes display
 
 ### Mobile Frontend
 - **React Native** with Expo
@@ -51,6 +61,8 @@ This project implements **Week 2** and **Week 3** milestones:
 - **Axios** for API calls
 - **React Context API** for state management
 - **Ionicons** for mobile icons
+- **Expo Notifications** for push notifications
+- **React Native Markdown Display** for rich notes rendering
 
 ## 📁 Project Structure
 
@@ -61,20 +73,25 @@ SchoolBag/
 │   │   └── database.js        # MongoDB connection
 │   ├── controllers/
 │   │   ├── authController.js  # Authentication logic
-│   │   └── taskController.js  # Task management logic
+│   │   ├── taskController.js  # Task management logic
+│   │   ├── noteController.js  # Notes management logic
+│   │   └── notificationController.js # Notifications logic
 │   ├── middleware/
 │   │   └── auth.js           # JWT authentication middleware
 │   ├── models/
 │   │   ├── User.js           # User schema
-│   │   └── Task.js           # Task schema
+│   │   ├── Task.js           # Task schema
+│   │   ├── Note.js           # Notes schema
+│   │   └── Notification.js   # Notification schema
 │   ├── routes/
 │   │   ├── auth.js           # Authentication routes
-│   │   └── tasks.js          # Task management routes
+│   │   ├── tasks.js          # Task management routes
+│   │   ├── notes.js          # Notes management routes
+│   │   └── notifications.js  # Notification routes
 │   ├── server.js             # Main server file
 │   ├── package.json          # Backend dependencies
 │   └── config.env            # Environment variables
 ├── client/                    # Web Frontend React app
-├── mobile/                    # Mobile React Native app (Expo)
 │   ├── public/
 │   │   └── index.html        # HTML template
 │   ├── src/
@@ -83,15 +100,37 @@ SchoolBag/
 │   │   │   ├── calendar/     # Calendar with heatmap
 │   │   │   ├── common/       # Shared components
 │   │   │   ├── dashboard/    # Main dashboard
-│   │   │   ├── layout/       # Navigation components
-│   │   │   └── tasks/        # Task management components
+│   │   │   ├── home/         # New home page components
+│   │   │   ├── layout/       # Navigation with notifications
+│   │   │   ├── notifications/ # Notification bell and dropdown
+│   │   │   └── tasks/        # Task management with notes
 │   │   ├── context/
 │   │   │   ├── AuthContext.js # Authentication state
-│   │   │   └── TaskContext.js # Task state management
+│   │   │   ├── TaskContext.js # Task state management
+│   │   │   └── NotificationContext.js # Notification state
 │   │   ├── App.js            # Main app component
 │   │   ├── index.js          # React entry point
 │   │   └── index.css         # Global styles
 │   └── package.json          # Frontend dependencies
+├── mobile/                    # Mobile React Native app (Expo)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── TaskItem.js   # Enhanced with notes access
+│   │   │   ├── TaskFormModal.js # Task creation/editing
+│   │   │   └── TaskNotesModal.js # Notes slide-up panel
+│   │   ├── context/
+│   │   │   ├── AuthContext.js # Authentication state
+│   │   │   ├── TaskContext.js # Task state management
+│   │   │   └── NotesContext.js # Notes state management
+│   │   ├── screens/
+│   │   │   ├── TasksScreen.js # Enhanced with notes
+│   │   │   ├── CalendarScreen.js
+│   │   │   └── ProfileScreen.js
+│   │   ├── services/
+│   │   │   └── NotificationService.js # Push notifications
+│   │   ├── App.js            # Main app component
+│   │   ├── app.json          # Expo configuration
+│   │   └── package.json      # Mobile dependencies
 └── documents/                # Project documentation
     ├── Nouveau_Cahier_des_Charges_SchoolBag.md
     └── _MConverter.eu_20250529192658_Analyse_Besoins_SchoolBag_Detaillee (3).md
@@ -200,6 +239,28 @@ SchoolBag/
 - **Tabbed Interface**: Switch between Tasks, Calendar, and Statistics views
 - **Real-time Updates**: All changes reflect immediately across the application
 
+### Sprint 2 Features Usage
+
+#### New Home Page
+- **Landing Experience**: Modern Todoist-inspired design with clear value proposition
+- **Call-to-Action**: Prominent signup/login buttons for easy user onboarding
+- **Feature Showcase**: Visual demonstration of task heatmap and benefits
+- **Social Proof**: User counter and testimonials to build trust
+
+#### Notifications System
+- **Web Notifications**: Bell icon in navigation shows unread count
+- **Notification Dropdown**: Click bell to see recent notifications with mark-as-read functionality
+- **Mobile Push Notifications**: Native push notifications for due date reminders
+- **Smart Reminders**: Automatic notifications 24 hours before due date, 2 hours before due time, and for overdue tasks
+
+#### Rich Notes System
+- **Task-Linked Notes**: Each task can have multiple rich-text notes
+- **Markdown Support**: Full Markdown editing with live preview
+- **Template System**: Pre-built templates (Lab Report, Exam Revision, Reading Summary, Essay Outline)
+- **Web Notes Interface**: Dual-pane layout with notes list and editor
+- **Mobile Notes Panel**: Slide-up modal with full Markdown editing capabilities
+- **Real-time Sync**: Notes automatically sync between web and mobile every 30 seconds
+
 ## 🎨 UI/UX Features
 
 - **Modern Design**: Clean, glass-morphism inspired interface
@@ -225,6 +286,22 @@ SchoolBag/
 - `PUT /api/tasks/:id` - Update task
 - `DELETE /api/tasks/:id` - Delete task
 - `GET /api/tasks/calendar` - Get tasks for calendar (grouped by date)
+
+### Notes (Sprint 2)
+- `GET /api/notes` - Get all user notes (with sync support via `since` parameter)
+- `POST /api/notes` - Create new note linked to a task
+- `GET /api/notes/:id` - Get specific note
+- `PUT /api/notes/:id` - Update note content
+- `DELETE /api/notes/:id` - Delete note
+- `GET /api/notes/task/:taskId` - Get all notes for a specific task
+- `GET /api/notes/templates` - Get available note templates
+
+### Notifications (Sprint 2)
+- `GET /api/notifications` - Get user notifications
+- `POST /api/notifications` - Create new notification
+- `PUT /api/notifications/:id` - Update notification (mark as read)
+- `DELETE /api/notifications/:id` - Delete notification
+- `PUT /api/notifications/mark-all-read` - Mark all notifications as read
 
 ## 🔐 Security Features
 
@@ -252,6 +329,24 @@ SchoolBag/
 - `dueDate`: Date (required)
 - `dueTime`: String (default: "23:59")
 - `estimatedHours`: Number (0.5-100, default: 1)
+- `user`: ObjectId (reference to User)
+- `createdAt`/`updatedAt`: Dates (auto-managed)
+
+### Note Schema (Sprint 2)
+- `title`: String (required, max 200 characters)
+- `content`: String (supports Markdown, max 10,000 characters)
+- `template`: String (template used for creation)
+- `tags`: Array of Strings (for categorization)
+- `task`: ObjectId (reference to Task)
+- `user`: ObjectId (reference to User)
+- `createdAt`/`updatedAt`: Dates (auto-managed)
+
+### Notification Schema (Sprint 2)
+- `title`: String (required, notification title)
+- `message`: String (required, notification content)
+- `type`: Enum (task_due, task_overdue, task_completed, system)
+- `isRead`: Boolean (default: false)
+- `data`: Object (additional notification data)
 - `user`: ObjectId (reference to User)
 - `createdAt`/`updatedAt`: Dates (auto-managed)
 
@@ -319,4 +414,4 @@ For detailed mobile setup instructions, see `mobile/README.md`.
 
 ---
 
-**Status**: ✅ Week 2 & 3 Milestones Complete - Authentication and Task Management with Calendar fully functional on both Web and Mobile platforms! 
+**Status**: ✅ Week 2, 3 & Sprint 2 Complete - Full-featured academic task management with authentication, calendar visualization, notifications, rich notes, and cross-platform sync functionality! 

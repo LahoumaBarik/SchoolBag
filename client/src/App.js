@@ -5,8 +5,10 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { useAuth } from './context/AuthContext';
 
+import Home from './components/home/Home';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/dashboard/Dashboard';
@@ -45,6 +47,14 @@ function AppContent() {
       <Routes>
         {/* Public Routes */}
         <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Home />
+            </PublicRoute>
+          }
+        />
+        <Route
           path="/login"
           element={
             <PublicRoute>
@@ -72,8 +82,7 @@ function AppContent() {
         />
         
         {/* Default redirects */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} />} />
       </Routes>
       
       <ToastContainer
@@ -96,11 +105,13 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <TaskProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </TaskProvider>
+      <NotificationProvider>
+        <TaskProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </TaskProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

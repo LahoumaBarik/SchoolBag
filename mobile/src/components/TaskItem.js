@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const TaskItem = ({ task, onEdit, onDelete, onStatusChange }) => {
+const TaskItem = ({ task, onEdit, onDelete, onStatusChange, onViewNotes }) => {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high':
@@ -103,6 +103,9 @@ const TaskItem = ({ task, onEdit, onDelete, onStatusChange }) => {
         </View>
 
         <View style={styles.actions}>
+          <TouchableOpacity onPress={() => onViewNotes(task)} style={styles.actionButton}>
+            <Ionicons name="document-text-outline" size={18} color="#10b981" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
             <Ionicons name="create-outline" size={18} color="#667eea" />
           </TouchableOpacity>

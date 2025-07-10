@@ -14,12 +14,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTask } from '../context/TaskContext';
 import TaskItem from '../components/TaskItem';
 import TaskFormModal from '../components/TaskFormModal';
+import TaskNotesModal from '../components/TaskNotesModal';
 
 const TasksScreen = () => {
   const { tasks, loading, createTask, updateTask, deleteTask, getTasksByStatus, getOverdueTasks } = useTask();
   const [filter, setFilter] = useState('all');
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [selectedTaskForNotes, setSelectedTaskForNotes] = useState(null);
 
   const filterOptions = [
     { key: 'all', label: 'All', icon: 'list-outline' },
@@ -96,6 +99,11 @@ const TasksScreen = () => {
     );
   };
 
+  const handleViewNotes = (task) => {
+    setSelectedTaskForNotes(task);
+    setShowNotesModal(true);
+  };
+
   const renderFilterButton = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -126,6 +134,7 @@ const TasksScreen = () => {
       task={item}
       onEdit={() => handleEditTask(item)}
       onDelete={() => handleDeleteTask(item._id)}
+      onViewNotes={handleViewNotes}
       onStatusChange={(newStatus) => 
         updateTask(item._id, { ...item, status: newStatus })
       }
@@ -218,6 +227,16 @@ const TasksScreen = () => {
         onClose={() => {
           setShowTaskModal(false);
           setEditingTask(null);
+        }}
+      />
+
+      {/* Task Notes Modal */}
+      <TaskNotesModal
+        visible={showNotesModal}
+        task={selectedTaskForNotes}
+        onClose={() => {
+          setShowNotesModal(false);
+          setSelectedTaskForNotes(null);
         }}
       />
     </View>

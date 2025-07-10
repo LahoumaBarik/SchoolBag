@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
+import NotificationService from '../services/NotificationService';
 
 const TaskContext = createContext();
 
@@ -39,7 +40,12 @@ export const TaskProvider = ({ children }) => {
     try {
       setLoading(true);
       const response = await api.get('/tasks');
-      setTasks(response.data.data || []);
+      const fetchedTasks = response.data.data || [];
+      setTasks(fetchedTasks);
+      
+      // Schedule notifications for existing tasks that don't have them
+      await scheduleNotificationsForExistingTasks(fetchedTasks);
+      
       setError(null);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to fetch tasks');
@@ -49,11 +55,37 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  // Schedule notifications for existing tasks
+  const scheduleNotificationsForExistingTasks = async (tasksList) => {
+    try {
+      for (const task of tasksList) {
+        // Only schedule for incomplete tasks with due dates
+        if (task.status !== 'completed' && task.dueDate) {
+          await NotificationService.scheduleTaskReminder(task, 24);
+          await NotificationService.scheduleTaskDueNotification(task);
+          await NotificationService.scheduleOverdueNotification(task);
+        }
+      }
+      console.log('Scheduled notifications for existing tasks');
+    } catch (error) {
+      console.error('Error scheduling notifications for existing tasks:', error);
+    }
+  };
+
   const createTask = async (taskData) => {
     try {
       const response = await api.post('/tasks', taskData);
-      setTasks(prev => [response.data.data, ...prev]);
-      return { success: true, task: response.data.data };
+      const newTask = response.data.data;
+      setTasks(prev => [newTask, ...prev]);
+      
+      // Schedule notifications for the new task if it has a due date
+      if (newTask.dueDate) {
+        await NotificationService.scheduleTaskReminder(newTask, 24); // 24 hours before
+        await NotificationService.scheduleTaskDueNotification(newTask); // 2 hours before due time
+        await NotificationService.scheduleOverdueNotification(newTask); // 24 hours after due date
+      }
+      
+      return { success: true, task: newTask };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to create task';
       setError(message);
@@ -64,12 +96,29 @@ export const TaskProvider = ({ children }) => {
   const updateTask = async (taskId, taskData) => {
     try {
       const response = await api.put(`/tasks/${taskId}`, taskData);
+      const updatedTask = response.data.data;
       setTasks(prev => 
         prev.map(task => 
-          task._id === taskId ? response.data.data : task
+          task._id === taskId ? updatedTask : task
         )
       );
-      return { success: true, task: response.data.data };
+      
+      // Cancel existing notifications for this task
+      await NotificationService.cancelTaskNotifications(taskId);
+      
+      // Schedule new notifications if task is not completed and has due date
+      if (updatedTask.status !== 'completed' && updatedTask.dueDate) {
+        await NotificationService.scheduleTaskReminder(updatedTask, 24);
+        await NotificationService.scheduleTaskDueNotification(updatedTask);
+        await NotificationService.scheduleOverdueNotification(updatedTask);
+      }
+      
+      // Send completion notification if task was just completed
+      if (updatedTask.status === 'completed') {
+        await NotificationService.sendTaskCompletionNotification(updatedTask);
+      }
+      
+      return { success: true, task: updatedTask };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to update task';
       setError(message);
@@ -81,6 +130,10 @@ export const TaskProvider = ({ children }) => {
     try {
       await api.delete(`/tasks/${taskId}`);
       setTasks(prev => prev.filter(task => task._id !== taskId));
+      
+      // Cancel all notifications for the deleted task
+      await NotificationService.cancelTaskNotifications(taskId);
+      
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to delete task';

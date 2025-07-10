@@ -1,220 +1,11 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
 
 const TaskContext = createContext();
 
-// Task reducer
-const taskReducer = (state, action) => {
-  switch (action.type) {
-    case 'LOADING_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-    case 'LOADING_END':
-      return {
-        ...state,
-        loading: false
-      };
-    case 'SET_TASKS':
-      return {
-        ...state,
-        tasks: action.payload,
-        loading: false,
-        error: null
-      };
-    case 'ADD_TASK':
-      return {
-        ...state,
-        tasks: [...state.tasks, action.payload],
-        loading: false,
-        error: null
-      };
-    case 'UPDATE_TASK':
-      return {
-        ...state,
-        tasks: state.tasks.map(task =>
-          task._id === action.payload._id ? action.payload : task
-        ),
-        loading: false,
-        error: null
-      };
-    case 'DELETE_TASK':
-      return {
-        ...state,
-        tasks: state.tasks.filter(task => task._id !== action.payload),
-        loading: false,
-        error: null
-      };
-    case 'SET_CALENDAR_TASKS':
-      return {
-        ...state,
-        calendarTasks: action.payload,
-        loading: false,
-        error: null
-      };
-    case 'SET_ERROR':
-      return {
-        ...state,
-        error: action.payload,
-        loading: false
-      };
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null
-      };
-    default:
-      return state;
-  }
-};
-
-// Initial state
-const initialState = {
-  tasks: [],
-  calendarTasks: {},
-  loading: false,
-  error: null
-};
-
-// TaskProvider component
-export const TaskProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(taskReducer, initialState);
-
-  // Fetch all tasks
-  const fetchTasks = async (filters = {}) => {
-    dispatch({ type: 'LOADING_START' });
-    try {
-      const params = new URLSearchParams(filters).toString();
-      const res = await axios.get(`/api/tasks?${params}`);
-      dispatch({
-        type: 'SET_TASKS',
-        payload: res.data.data
-      });
-      return { success: true, data: res.data.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to fetch tasks';
-      dispatch({
-        type: 'SET_ERROR',
-        payload: message
-      });
-      toast.error(message);
-      return { success: false, error: message };
-    }
-  };
-
-  // Fetch calendar tasks
-  const fetchCalendarTasks = async (month, year) => {
-    dispatch({ type: 'LOADING_START' });
-    try {
-      const res = await axios.get(`/api/tasks/calendar?month=${month}&year=${year}`);
-      dispatch({
-        type: 'SET_CALENDAR_TASKS',
-        payload: res.data.data
-      });
-      return { success: true, data: res.data.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to fetch calendar tasks';
-      dispatch({
-        type: 'SET_ERROR',
-        payload: message
-      });
-      toast.error(message);
-      return { success: false, error: message };
-    }
-  };
-
-  // Create task
-  const createTask = async (taskData) => {
-    dispatch({ type: 'LOADING_START' });
-    try {
-      const res = await axios.post('/api/tasks', taskData);
-      dispatch({
-        type: 'ADD_TASK',
-        payload: res.data.data
-      });
-      toast.success('Task created successfully!');
-      return { success: true, data: res.data.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to create task';
-      dispatch({
-        type: 'SET_ERROR',
-        payload: message
-      });
-      toast.error(message);
-      return { success: false, error: message };
-    }
-  };
-
-  // Update task
-  const updateTask = async (taskId, taskData) => {
-    dispatch({ type: 'LOADING_START' });
-    try {
-      const res = await axios.put(`/api/tasks/${taskId}`, taskData);
-      dispatch({
-        type: 'UPDATE_TASK',
-        payload: res.data.data
-      });
-      toast.success('Task updated successfully!');
-      return { success: true, data: res.data.data };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to update task';
-      dispatch({
-        type: 'SET_ERROR',
-        payload: message
-      });
-      toast.error(message);
-      return { success: false, error: message };
-    }
-  };
-
-  // Delete task
-  const deleteTask = async (taskId) => {
-    dispatch({ type: 'LOADING_START' });
-    try {
-      await axios.delete(`/api/tasks/${taskId}`);
-      dispatch({
-        type: 'DELETE_TASK',
-        payload: taskId
-      });
-      toast.success('Task deleted successfully!');
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || 'Failed to delete task';
-      dispatch({
-        type: 'SET_ERROR',
-        payload: message
-      });
-      toast.error(message);
-      return { success: false, error: message };
-    }
-  };
-
-  // Clear errors
-  const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
-  };
-
-  const value = {
-    ...state,
-    fetchTasks,
-    fetchCalendarTasks,
-    createTask,
-    updateTask,
-    deleteTask,
-    clearError
-  };
-
-  return (
-    <TaskContext.Provider value={value}>
-      {children}
-    </TaskContext.Provider>
-  );
-};
-
-// Custom hook to use task context
 export const useTask = () => {
   const context = useContext(TaskContext);
   if (!context) {
@@ -223,4 +14,147 @@ export const useTask = () => {
   return context;
 };
 
-export default TaskContext; 
+// TaskProvider component
+export const TaskProvider = ({ children }) => {
+  const [tasks, setTasks] = useState([]);
+  const [calendarTasks, setCalendarTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token, API_BASE_URL } = useAuth();
+  const { createNotification } = useNotifications();
+
+  // Create axios instance
+  const api = axios.create({
+    baseURL: API_BASE_URL || '/api',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  useEffect(() => {
+    api.defaults.headers.Authorization = `Bearer ${token}`;
+  }, [token]);
+
+  // Fetch all tasks
+  const fetchTasks = async (filters = {}) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams(filters).toString();
+      const res = await api.get(`/tasks?${params}`);
+      setTasks(res.data.data);
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to fetch tasks';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch tasks for calendar
+  const fetchCalendarTasks = async (month, year) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/tasks/calendar?month=${month}&year=${year}`);
+      setCalendarTasks(res.data.data);
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to fetch calendar tasks';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create a new task
+  const createTask = async (taskData) => {
+    setLoading(true);
+    try {
+      const res = await api.post('/tasks', taskData);
+      const newTask = res.data.data;
+      setTasks(prev => [newTask, ...prev]);
+      toast.success('Task created successfully!');
+
+      if (new Date(newTask.dueDate) < new Date() && newTask.status !== 'completed') {
+        await createNotification({
+          title: 'Task Overdue',
+          message: `Your task "${newTask.title}" was created in an overdue state.`,
+          type: 'task_overdue',
+          data: { taskId: newTask._id }
+        });
+      }
+
+      return { success: true, data: newTask };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to create task';
+      setError(message);
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update an existing task
+  const updateTask = async (taskId, taskData) => {
+    setLoading(true);
+    try {
+      const res = await api.put(`/tasks/${taskId}`, taskData);
+      const updatedTask = res.data.data;
+      setTasks(prev => prev.map(task => task._id === taskId ? updatedTask : task));
+      toast.success('Task updated successfully!');
+
+      if (new Date(updatedTask.dueDate) < new Date() && updatedTask.status !== 'completed') {
+        await createNotification({
+          title: 'Task Overdue',
+          message: `Your task "${updatedTask.title}" is currently overdue.`,
+          type: 'task_overdue',
+          data: { taskId: updatedTask._id }
+        });
+      }
+
+      return { success: true, data: updatedTask };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to update task';
+      setError(message);
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete a task
+  const deleteTask = async (taskId) => {
+    setLoading(true);
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      setTasks(prev => prev.filter(task => task._id !== taskId));
+      toast.success('Task deleted successfully!');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete task';
+      setError(message);
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value = {
+    tasks,
+    calendarTasks,
+    loading,
+    error,
+    fetchTasks,
+    fetchCalendarTasks,
+    createTask,
+    updateTask,
+    deleteTask,
+  };
+
+  return (
+    <TaskContext.Provider value={value}>
+      {children}
+    </TaskContext.Provider>
+  );
+}; 

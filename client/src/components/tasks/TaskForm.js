@@ -62,15 +62,16 @@ const TaskForm = ({ task, onClose, onTaskSaved }) => {
     
     if (!formData.dueDate) {
       newErrors.dueDate = 'Due date is required';
-    } else {
-      const selectedDate = new Date(formData.dueDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+    } 
+    // else {
+    //   const selectedDate = new Date(formData.dueDate);
+    //   const today = new Date();
+    //   today.setHours(0, 0, 0, 0);
       
-      if (selectedDate < today) {
-        newErrors.dueDate = 'Due date cannot be in the past';
-      }
-    }
+    //   if (selectedDate < today) {
+    //     newErrors.dueDate = 'Due date cannot be in the past';
+    //   }
+    // }
     
     if (formData.estimatedHours < 0.5 || formData.estimatedHours > 100) {
       newErrors.estimatedHours = 'Estimated hours must be between 0.5 and 100';
@@ -89,7 +90,7 @@ const TaskForm = ({ task, onClose, onTaskSaved }) => {
 
     const taskData = {
       ...formData,
-      dueDate: new Date(formData.dueDate).toISOString(),
+      dueDate: new Date(`${formData.dueDate}T${formData.dueTime}`).toISOString(),
       estimatedHours: parseFloat(formData.estimatedHours)
     };
 

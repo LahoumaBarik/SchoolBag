@@ -4,12 +4,20 @@ This is the mobile version of SchoolBag, built with React Native and Expo. It pr
 
 ## Features ✨
 
+### Core Features
 - **Authentication**: Secure login and registration
 - **Task Management**: Create, edit, delete, and organize tasks
 - **Calendar View**: Interactive calendar with task heatmap
 - **Task Filtering**: Filter by status (pending, in-progress, completed, overdue)
 - **Profile Management**: User profile with statistics and settings
 - **Real-time Sync**: Shares the same backend as the web version
+
+### Sprint 2 Features 🆕
+- **Push Notifications**: Native push notifications for task due date reminders
+- **Rich Notes System**: Markdown-supported notes linked to tasks with slide-up modal interface
+- **Note Templates**: Pre-built templates for different types of academic work
+- **Real-time Notes Sync**: Automatic synchronization of notes with web platform every 30 seconds
+- **Enhanced Task Interface**: Notes access button added to each task for quick note management
 
 ## Prerequisites 📋
 
@@ -92,19 +100,24 @@ npx expo start
 ```
 mobile/
 ├── App.js                 # Main app component with navigation
+├── app.json              # Expo configuration with notification permissions
 ├── src/
 │   ├── context/
 │   │   ├── AuthContext.js      # Authentication state management
-│   │   └── TaskContext.js      # Task state management
+│   │   ├── TaskContext.js      # Task state management with notifications
+│   │   └── NotesContext.js     # Notes state management (Sprint 2)
 │   ├── screens/
 │   │   ├── LoginScreen.js      # Login interface
 │   │   ├── RegisterScreen.js   # Registration interface
-│   │   ├── TasksScreen.js      # Task management screen
+│   │   ├── TasksScreen.js      # Enhanced task management with notes access
 │   │   ├── CalendarScreen.js   # Calendar with heatmap
 │   │   └── ProfileScreen.js    # User profile and settings
-│   └── components/
-│       ├── TaskItem.js         # Individual task display
-│       └── TaskFormModal.js    # Task creation/editing modal
+│   ├── components/
+│   │   ├── TaskItem.js         # Enhanced with notes button
+│   │   ├── TaskFormModal.js    # Task creation/editing modal
+│   │   └── TaskNotesModal.js   # Notes slide-up modal (Sprint 2)
+│   └── services/
+│       └── NotificationService.js # Push notification service (Sprint 2)
 ├── package.json
 └── README.md
 ```
@@ -138,6 +151,31 @@ mobile/
 - Settings menu (placeholders for future features)
 - Logout functionality
 
+### Sprint 2 Features
+
+#### Push Notifications
+- **Native Integration**: Uses Expo Notifications for cross-platform push notifications
+- **Smart Reminders**: 
+  - 24-hour advance reminder before task due date
+  - 2-hour warning before due time
+  - Overdue task notifications 24 hours after due date
+  - Task completion celebration notifications
+- **Permission Handling**: Automatic permission requests with graceful fallback
+- **Background Scheduling**: Notifications work even when app is closed
+
+#### Rich Notes System
+- **Task-Linked Notes**: Each task can have multiple rich-text notes accessed via notes button
+- **Slide-up Modal**: Full-screen modal with dual-pane layout (notes list + editor)
+- **Markdown Support**: Full Markdown editing with real-time preview rendering
+- **Template System**: Choose from pre-built templates:
+  - Blank Page (default)
+  - Exam Revision (structured study template)
+  - Lab Report (complete lab report format)
+  - Reading Summary (book/article summary template)
+  - Essay Outline (comprehensive essay structure)
+- **Note Management**: Create, edit, delete notes with confirmation dialogs
+- **Auto-sync**: Notes automatically sync with web platform every 30 seconds
+
 ## API Integration 🔌
 
 The mobile app uses the same REST API as the web version:
@@ -145,6 +183,8 @@ The mobile app uses the same REST API as the web version:
 - **Authentication**: `/api/auth/login`, `/api/auth/register`, `/api/auth/me`
 - **Tasks**: `/api/tasks` (GET, POST, PUT, DELETE)
 - **Calendar**: `/api/tasks/calendar/:year/:month`
+- **Notes** (Sprint 2): `/api/notes` (CRUD operations), `/api/notes/task/:taskId`, `/api/notes/templates`
+- **Notifications** (Sprint 2): `/api/notifications` (GET, POST, PUT, DELETE)
 
 ## Troubleshooting 🔧
 
@@ -199,6 +239,9 @@ See [Expo documentation](https://docs.expo.dev/build/introduction/) for detailed
 - **Axios**: HTTP client for API requests
 - **AsyncStorage**: Local data persistence
 - **Ionicons**: Icon library
+- **Expo Notifications** (Sprint 2): Native push notifications
+- **Expo Device** (Sprint 2): Device information for notifications
+- **React Native Markdown Display** (Sprint 2): Markdown rendering for notes
 
 ## Contributing 🤝
 

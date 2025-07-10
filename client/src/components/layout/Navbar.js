@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut, User, BookOpen } from 'lucide-react';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -59,6 +60,8 @@ const Navbar = () => {
           alignItems: 'center',
           gap: '16px'
         }}>
+          <NotificationDropdown />
+          
           <div style={{
             display: 'flex',
             alignItems: 'center',

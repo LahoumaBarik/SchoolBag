@@ -34,37 +34,61 @@ const TaskFormModal = ({ visible, task, onSubmit, onClose }) => {
 
   useEffect(() => {
     if (task) {
+      // Create a date that's explicitly in local time zone
       const taskDate = new Date(task.dueDate);
+      const year = taskDate.getFullYear();
+      const month = taskDate.getMonth();
+      const day = taskDate.getDate();
+      
+      // Create a fresh date with the local components
+      const localTaskDate = new Date(year, month, day, 12, 0, 0);
+      
       const timeDate = new Date();
       if (task.dueTime) {
         const [hours, minutes] = task.dueTime.split(':');
         timeDate.setHours(parseInt(hours), parseInt(minutes));
       }
+      
+      // Get YYYY-MM-DD format using local values to prevent timezone shift
+      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
       setFormData({
         title: task.title,
         description: task.description || '',
         subject: task.subject,
         type: task.type || 'assignment',
-        dueDate: taskDate.toISOString().split('T')[0],
+        dueDate: dateString,
         dueTime: task.dueTime || '23:59',
         estimatedHours: task.estimatedHours || 1,
         priority: task.priority,
         status: task.status,
       });
-      setSelectedDate(taskDate);
+      setSelectedDate(localTaskDate);
       setSelectedTime(timeDate);
-      setTempDate(taskDate);
+      setTempDate(localTaskDate);
       setTempTime(timeDate);
     } else {
-      const today = new Date();
+      // Create date that's explicitly in local time zone with no offset issues
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const day = now.getDate();
+      
+      // Create a fresh date object with local components
+      const today = new Date(year, month, day, 12, 0, 0);
+      
       const defaultTime = new Date();
       defaultTime.setHours(23, 59);
+      
+      // Get YYYY-MM-DD format using local values to prevent timezone shift
+      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
       setFormData({
         title: '',
         description: '',
         subject: '',
         type: 'assignment',
-        dueDate: today.toISOString().split('T')[0],
+        dueDate: dateString,
         dueTime: '23:59',
         estimatedHours: 1,
         priority: 'medium',
@@ -88,11 +112,22 @@ const TaskFormModal = ({ visible, task, onSubmit, onClose }) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
       if (date) {
-        setSelectedDate(date);
-        setTempDate(date);
+        // Extract local date components
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const day = date.getDate();
+        
+        // Create a fresh date using local components
+        const localDate = new Date(year, month, day, 12, 0, 0);
+        
+        // Format date string explicitly to avoid timezone issues
+        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        setSelectedDate(localDate);
+        setTempDate(localDate);
         setFormData(prev => ({
           ...prev,
-          dueDate: date.toISOString().split('T')[0],
+          dueDate: dateString,
         }));
       }
     } else {
@@ -104,10 +139,21 @@ const TaskFormModal = ({ visible, task, onSubmit, onClose }) => {
   };
 
   const handleDateConfirm = () => {
-    setSelectedDate(tempDate);
+    // Extract local date components
+    const year = tempDate.getFullYear();
+    const month = tempDate.getMonth();
+    const day = tempDate.getDate();
+    
+    // Create a fresh date using local components
+    const localDate = new Date(year, month, day, 12, 0, 0);
+    
+    // Format date string explicitly to avoid timezone issues
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    setSelectedDate(localDate);
     setFormData(prev => ({
       ...prev,
-      dueDate: tempDate.toISOString().split('T')[0],
+      dueDate: dateString,
     }));
     setShowDatePicker(false);
   };
@@ -164,8 +210,15 @@ const TaskFormModal = ({ visible, task, onSubmit, onClose }) => {
 
   const formatDisplayDate = (dateString) => {
     if (!dateString) return 'Select Date';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+
+    // Manually parse the 'YYYY-MM-DD' string to avoid timezone issues.
+    // `new Date('YYYY-MM-DD')` is parsed as UTC, which can cause off-by-one-day errors.
+    const [year, month, day] = dateString.split('-').map(Number);
+    
+    // Create a date in the local timezone by providing components. Month is 0-indexed.
+    const localDate = new Date(year, month - 1, day);
+
+    return localDate.toLocaleDateString('en-US', {
       weekday: 'short',
       year: 'numeric',
       month: 'short',
@@ -196,9 +249,17 @@ const TaskFormModal = ({ visible, task, onSubmit, onClose }) => {
   const handleSubmit = () => {
     if (!validateForm()) return;
 
+    // Parse the date parts
+    const [year, month, day] = formData.dueDate.split('-').map(part => parseInt(part, 10));
+    // Parse the time parts
+    const [hours, minutes] = formData.dueTime.split(':').map(part => parseInt(part, 10));
+    
+    // Create a date using local components (month is 0-indexed in JS Date)
+    const localDate = new Date(year, month - 1, day, hours, minutes, 0);
+    
     const submitData = {
       ...formData,
-      dueDate: new Date(formData.dueDate).toISOString(),
+      dueDate: localDate.toISOString(),
       estimatedHours: parseFloat(formData.estimatedHours),
     };
 

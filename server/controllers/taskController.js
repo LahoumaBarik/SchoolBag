@@ -1,5 +1,7 @@
 const Task = require('../models/Task');
 const { validationResult } = require('express-validator');
+const { createTaskNotification } = require('./notificationController');
+const Notification = require('../models/Notification'); // Added import for Notification model
 
 // @desc    Get all tasks for logged in user
 // @route   GET /api/tasks
@@ -149,10 +151,31 @@ const updateTask = async (req, res) => {
       });
     }
 
+    const oldStatus = task.status;
+    const oldTask = { ...task._doc };
+    
     task = await Task.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
     });
+
+    // Create notification when task is completed
+    if (oldStatus !== 'completed' && task.status === 'completed') {
+      await createTaskNotification(req.user.id, task._id, 'task_completed');
+    }
+
+    // Create notification if task details were updated (not just status)
+    const fieldsToCheck = ['title', 'description', 'dueDate', 'dueTime', 'subject', 'priority', 'type'];
+    const changed = fieldsToCheck.some(field => String(oldTask[field]) !== String(task[field]));
+    if (changed && task.status !== 'completed') {
+      await Notification.create({
+        user: req.user.id,
+        title: 'Task Updated',
+        message: `Your task "${task.title}" was updated. Check the details!`,
+        type: 'task_updated',
+        relatedTask: task._id
+      });
+    }
 
     res.status(200).json({
       success: true,

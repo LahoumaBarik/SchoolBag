@@ -7,6 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { TaskProvider } from './src/context/TaskContext';
+import { NotesProvider } from './src/context/NotesContext';
+import NotificationService from './src/services/NotificationService';
 
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -77,6 +79,18 @@ const MainTabs = () => (
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
 
+  // Initialize notification service when user is authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      NotificationService.initialize();
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      NotificationService.cleanup();
+    };
+  }, [isAuthenticated]);
+
   if (loading) {
     return null; // You could add a loading screen here
   }
@@ -94,8 +108,10 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <TaskProvider>
-          <AppContent />
-          <StatusBar style="auto" />
+          <NotesProvider>
+            <AppContent />
+            <StatusBar style="auto" />
+          </NotesProvider>
         </TaskProvider>
       </AuthProvider>
     </SafeAreaProvider>

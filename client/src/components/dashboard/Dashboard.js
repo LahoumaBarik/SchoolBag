@@ -5,12 +5,15 @@ import TaskList from '../tasks/TaskList';
 import TaskForm from '../tasks/TaskForm';
 import Calendar from '../calendar/Calendar';
 import { Plus, Calendar as CalendarIcon, List, BarChart3 } from 'lucide-react';
+import TaskDetailModal from '../tasks/TaskDetailModal';
 import Loading from '../common/Loading';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('tasks');
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState(null);
   
   const { user } = useAuth();
   const { fetchTasks, tasks, loading } = useTask();
@@ -22,6 +25,14 @@ const Dashboard = () => {
   const handleEditTask = (task) => {
     setEditingTask(task);
     setShowTaskForm(true);
+  };
+  const handleViewTaskDetail = (task) => {
+    setSelectedTaskDetail(task);
+    setShowTaskDetail(true);
+  };
+  const handleCloseTaskDetail = () => {
+    setShowTaskDetail(false);
+    setSelectedTaskDetail(null);
   };
 
   const handleCloseForm = () => {
@@ -196,15 +207,17 @@ const Dashboard = () => {
                   }}>
                     Your Tasks
                   </h2>
-                  <button
-                    onClick={() => setShowTaskForm(true)}
-                    className="btn btn-primary"
-                  >
-                    <Plus size={16} />
-                    Add Task
-                  </button>
+                  <div>
+                    <button
+                      onClick={() => setShowTaskForm(true)}
+                      className="btn btn-primary"
+                    >
+                      <Plus size={16} />
+                      Add Task
+                    </button>
+                  </div>
                 </div>
-                <TaskList onEditTask={handleEditTask} />
+                <TaskList onEditTask={handleEditTask} onViewTask={handleViewTaskDetail} />
               </div>
             )}
 
@@ -271,6 +284,17 @@ const Dashboard = () => {
             task={editingTask}
             onClose={handleCloseForm}
             onTaskSaved={handleTaskCreated}
+          />
+        )}
+        {/* Task Detail Modal */}
+        {showTaskDetail && (
+          <TaskDetailModal
+            task={selectedTaskDetail}
+            onClose={handleCloseTaskDetail}
+            onTaskSaved={() => {
+              handleCloseTaskDetail();
+              fetchTasks();
+            }}
           />
         )}
       </div>

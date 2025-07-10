@@ -13,7 +13,7 @@ import {
 import { format } from 'date-fns';
 import Loading from '../common/Loading';
 
-const TaskList = ({ onEditTask }) => {
+const TaskList = ({ onEditTask, onViewTask }) => {
   const { tasks, loading, updateTask, deleteTask } = useTask();
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('dueDate');
@@ -153,6 +153,7 @@ const TaskList = ({ onEditTask }) => {
             <div
               key={task._id}
               className="card"
+              onClick={() => onViewTask(task)}
               style={{
                 padding: '20px',
                 position: 'relative',
@@ -171,7 +172,8 @@ const TaskList = ({ onEditTask }) => {
               }}>
                 {/* Status Icon */}
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     const nextStatus = task.status === 'pending' 
                       ? 'in-progress' 
                       : task.status === 'in-progress' 
@@ -288,7 +290,7 @@ const TaskList = ({ onEditTask }) => {
                   gap: '8px'
                 }}>
                   <button
-                    onClick={() => onEditTask(task)}
+                    onClick={(e) => { e.stopPropagation(); onEditTask(task); }}
                     className="btn btn-secondary"
                     style={{
                       padding: '8px',
@@ -299,7 +301,7 @@ const TaskList = ({ onEditTask }) => {
                   </button>
                   
                   <button
-                    onClick={() => handleDeleteTask(task._id)}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteTask(task._id); }}
                     className="btn btn-danger"
                     style={{
                       padding: '8px',

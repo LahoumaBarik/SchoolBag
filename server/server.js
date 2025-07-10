@@ -2,12 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
+const { initializeSchedulers } = require('./services/notificationScheduler');
 
 // Load env vars
-dotenv.config();
+dotenv.config({ path: './config/config.env' });
 
 // Connect to database
 connectDB();
+
+// Initialize notification schedulers
+initializeSchedulers();
 
 const app = express();
 
@@ -29,6 +33,8 @@ app.use(cors({
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/tasks', require('./routes/tasks'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/notes', require('./routes/notes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

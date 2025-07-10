@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,30 +9,52 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
+import { Key, User, Lock, Fingerprint } from 'lucide-react-native';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Add this back
+  const { login, loginWithBiometrics, token } = useAuth(); // Get new functions and token
+  const [isBiometricLoginPossible, setIsBiometricLoginPossible] = useState(false);
+  const [buttonLoading, setButtonLoading] = useState(false); // Local loading state for button
 
-  const { login } = useAuth();
+  // Check if biometric login is possible when the component mounts
+  useEffect(() => {
+    if (token) {
+      setIsBiometricLoginPossible(true);
+    }
+  }, [token]);
+
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Validation Error', 'Please enter both email and password.');
       return;
     }
+    setButtonLoading(true); // Make sure loading is defined in the component state
+    try {
+      const result = await login(email, password);
+      // No navigation here; app will switch automatically
+      if (!result.success) {
+        Alert.alert('Login Failed', result.message || 'Please check your credentials.');
+      }
+    } catch (error) {
+      Alert.alert('Login Error', 'An unexpected error occurred.');
+    } finally {
+      setButtonLoading(false); // This will run no matter what
+    }
+  };
 
-    setLoading(true);
-    const result = await login(email, password);
-    setLoading(false);
-
+  const handleBiometricLogin = async () => {
+    const result = await loginWithBiometrics();
+    // No navigation here; app will switch automatically
     if (!result.success) {
-      Alert.alert('Login Failed', result.message);
+      Alert.alert('Login Failed', result.error || 'Could not log in with biometrics.');
     }
   };
 
@@ -63,36 +85,41 @@ const LoginScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Lock color="#9CA3AF" size={20} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Password"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry={!showPassword} // This line needs showPassword
               value={password}
               onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
             />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons 
-                name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                size={20} 
-                color="#666" 
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={24}
+                color="#9CA3AF"
               />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={[styles.loginButton, loading && styles.disabledButton]}
+            style={[styles.loginButton, buttonLoading && styles.disabledButton]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={buttonLoading}
           >
             <Text style={styles.loginButtonText}>
-              {loading ? 'Signing In...' : 'Sign In'}
+              {buttonLoading ? 'Signing In...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
+
+          {/* Biometric Login Button */}
+          {isBiometricLoginPossible && (
+            <TouchableOpacity style={styles.biometricButton} onPress={handleBiometricLogin}>
+              <Fingerprint color="#667eea" size={24} style={styles.biometricIcon} />
+              <Text style={styles.biometricButtonText}>Login with Face ID</Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Don't have an account? </Text>
@@ -200,6 +227,23 @@ const styles = StyleSheet.create({
     color: '#667eea',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#f0f2f5', // A subtle background
+  },
+  biometricIcon: {
+    marginRight: 10,
+  },
+  biometricButtonText: {
+    color: '#667eea',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

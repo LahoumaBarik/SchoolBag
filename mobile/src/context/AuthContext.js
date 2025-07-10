@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import * as SecureStore from 'expo-secure-store';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 const AuthContext = createContext();
 
@@ -15,40 +16,38 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Use laptop's IP address on hotspot network
-  const API_BASE_URL = 'http://172.20.10.2:5000/api';
+  // *******************************************************************
+  // IMPORTANT: Replace this with your ngrok URL when using tunnel mode
+  // When testing on physical device, use your network IP or ngrok URL
+  // Example: const API_BASE_URL = 'https://random-string.ngrok-free.app/api';
+  const API_BASE_URL = 'https://5986edb92d84.ngrok-free.app/api';
 
   useEffect(() => {
-    checkAuthState();
+    // Check for a saved token when the app starts
+    loadTokenFromStorage();
   }, []);
 
-  const checkAuthState = async () => {
+  const loadTokenFromStorage = async () => {
     try {
-      const savedToken = await AsyncStorage.getItem('token');
-      if (savedToken && savedToken !== 'undefined' && savedToken !== 'null') {
+      const savedToken = await SecureStore.getItemAsync('userToken');
+      if (savedToken) {
         setToken(savedToken);
-        // Verify token with backend
-        const response = await axios.get(`${API_BASE_URL}/auth/me`, {
-          headers: { Authorization: `Bearer ${savedToken}` },
-          timeout: 10000, // 10 second timeout
-        });
-        setUser(response.data.data.user);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+        // Optionally, you can validate the token with the backend here
+        // For now, we'll just set isAuthenticated to true
+        setIsAuthenticated(true);
       }
     } catch (error) {
-      console.log('Auth check failed:', error.message);
-      // Clear invalid token
-      try {
-        await AsyncStorage.removeItem('token');
-      } catch (storageError) {
-        console.log('Storage cleanup error:', storageError.message);
-      }
+      console.error('Failed to load token from storage', error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Login user
   const login = async (email, password) => {
     try {
       console.log('Attempting login to:', API_BASE_URL);
@@ -59,17 +58,17 @@ export const AuthProvider = ({ children }) => {
         timeout: 10000, // 10 second timeout
       });
 
-      const { token: newToken, user: userData } = response.data.data;
+      const { token, user } = response.data.data;
+
+      setToken(token);
+      setUser(user);
+      setIsAuthenticated(true);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      // Validate token before storing
-      if (newToken && typeof newToken === 'string') {
-        await AsyncStorage.setItem('token', newToken);
-        setToken(newToken);
-        setUser(userData);
-        return { success: true };
-      } else {
-        throw new Error('Invalid token received from server');
-      }
+      // Save the token securely
+      await SecureStore.setItemAsync('userToken', token);
+
+      return { success: true, user };
     } catch (error) {
       console.log('Login error:', error.message);
       return {
@@ -79,6 +78,62 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Logout user
+  const logout = async () => {
+    setUser(null);
+    setToken(null);
+    setIsAuthenticated(false);
+    delete axios.defaults.headers.common['Authorization'];
+    
+    // Remove the token from secure storage
+    await SecureStore.deleteItemAsync('userToken');
+  };
+
+  // Biometric Login
+  const loginWithBiometrics = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+      if (!hasHardware || !isEnrolled) {
+        return { success: false, error: 'Biometrics not available on this device.' };
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Log in with Face ID',
+      });
+
+      if (result.success) {
+        setLoading(true);
+        const savedToken = await SecureStore.getItemAsync('userToken');
+
+        if (savedToken) {
+          // Token exists, now verify it and get user data
+          const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          });
+
+          const userData = response.data.data.user;
+          setUser(userData);
+          setToken(savedToken);
+          setIsAuthenticated(true);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+          setLoading(false);
+          return { success: true };
+        } else {
+          setLoading(false);
+          return { success: false, error: 'No saved credentials found. Please log in normally first.' };
+        }
+      }
+      return { success: false, error: 'Biometric authentication failed or was canceled.' };
+    } catch (error) {
+      setLoading(false);
+      console.log('Biometric login error:', error);
+      return { success: false, error: 'An error occurred during biometric login.' };
+    }
+  };
+
+
   const register = async (firstName, lastName, email, password) => {
     try {
       console.log('Attempting registration to:', API_BASE_URL);
@@ -86,17 +141,16 @@ export const AuthProvider = ({ children }) => {
         name: `${firstName} ${lastName}`,
         email,
         password,
-      }, {
-        timeout: 10000, // 10 second timeout
       });
 
       const { token: newToken, user: userData } = response.data.data;
       
-      // Validate token before storing
       if (newToken && typeof newToken === 'string') {
-        await AsyncStorage.setItem('token', newToken);
+        await SecureStore.setItemAsync('userToken', newToken);
         setToken(newToken);
         setUser(userData);
+        setIsAuthenticated(true);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         return { success: true };
       } else {
         throw new Error('Invalid token received from server');
@@ -110,32 +164,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    try {
-      await AsyncStorage.removeItem('token');
-    } catch (error) {
-      console.log('Logout storage error:', error.message);
-    }
-    setToken(null);
-    setUser(null);
-  };
-
-  const isAuthenticated = !!token && !!user;
 
   const value = {
     user,
     token,
-    loading,
     isAuthenticated,
+    loading,
     login,
-    register,
     logout,
+    register,
+    loginWithBiometrics, // Expose the new function
     API_BASE_URL,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }; 
