@@ -7,6 +7,7 @@ import Calendar from '../calendar/Calendar';
 import { Plus, Calendar as CalendarIcon, List, BarChart3 } from 'lucide-react';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import Loading from '../common/Loading';
+import TaskStatistics from '../stats/TaskStatistics';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('tasks');
@@ -75,142 +76,74 @@ const Dashboard = () => {
   }
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 80px)', padding: '20px 0' }}>
-      <div className="container">
+    <div className="min-h-[calc(100vh-80px)] bg-gray-50 p-4 sm:p-6 lg:p-8 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto">
         {/* Welcome Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: 'white',
-            margin: '0 0 8px 0',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-          }}>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100">
             Welcome back, {user?.name}!
           </h1>
-          <p style={{
-            fontSize: '18px',
-            color: 'rgba(255, 255, 255, 0.8)',
-            margin: 0
-          }}>
+          <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">
             Here's what's happening with your tasks today
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '20px',
-          marginBottom: '32px'
-        }}>
-          <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)',
-              borderRadius: '12px',
-              padding: '12px',
-              display: 'inline-flex',
-              marginBottom: '12px'
-            }}>
-              <BarChart3 size={24} color="white" />
-            </div>
-            <h3 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 4px 0', color: '#333' }}>
-              {getCompletedTasksCount()}
-            </h3>
-            <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>Completed Tasks</p>
-          </div>
-
-          <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #339af0 0%, #228be6 100%)',
-              borderRadius: '12px',
-              padding: '12px',
-              display: 'inline-flex',
-              marginBottom: '12px'
-            }}>
-              <CalendarIcon size={24} color="white" />
-            </div>
-            <h3 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 4px 0', color: '#333' }}>
-              {getTodayTasksCount()}
-            </h3>
-            <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>Due Today</p>
-          </div>
-
-          <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
-              borderRadius: '12px',
-              padding: '12px',
-              display: 'inline-flex',
-              marginBottom: '12px'
-            }}>
-              <List size={24} color="white" />
-            </div>
-            <h3 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 4px 0', color: '#333' }}>
-              {getOverdueTasksCount()}
-            </h3>
-            <p style={{ color: '#666', margin: 0, fontSize: '14px' }}>Overdue</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <StatCard
+            title="Completed Tasks"
+            value={getCompletedTasksCount()}
+            icon={<BarChart3 size={24} className="text-white" />}
+            color="bg-green-500"
+          />
+          <StatCard
+            title="Due Today"
+            value={getTodayTasksCount()}
+            icon={<CalendarIcon size={24} className="text-white" />}
+            color="bg-blue-500"
+          />
+          <StatCard
+            title="Overdue"
+            value={getOverdueTasksCount()}
+            icon={<List size={24} className="text-white" />}
+            color="bg-red-500"
+          />
         </div>
 
         {/* Tab Navigation */}
-        <div className="card" style={{ marginBottom: '20px' }}>
-          <div style={{
-            display: 'flex',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
-          }}>
+        <div className="bg-white rounded-lg shadow-md mb-6 dark:bg-gray-800">
+          <div className="flex border-b border-gray-200 dark:border-gray-700">
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    padding: '16px 24px',
-                    border: 'none',
-                    background: activeTab === tab.id 
-                      ? 'linear-gradient(135deg, #667eea 0%, #4f63d2 100%)'
-                      : 'transparent',
-                    color: activeTab === tab.id ? 'white' : '#666',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    borderRadius: activeTab === tab.id ? '8px 8px 0 0' : '0',
-                    transition: 'all 0.3s ease'
-                  }}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2
+                    ${activeTab === tab.id
+                      ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
+                    } transition-all duration-200 ease-in-out focus:outline-none`}
                 >
                   <Icon size={20} />
-                  {tab.label}
+                  <span>{tab.label}</span>
                 </button>
               );
             })}
           </div>
 
           {/* Tab Content */}
-          <div style={{ padding: '24px' }}>
+          <div className="p-6">
             {activeTab === 'tasks' && (
               <div>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '24px'
-                }}>
-                  <h2 style={{
-                    fontSize: '24px',
-                    fontWeight: '700',
-                    margin: 0,
-                    color: '#333'
-                  }}>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                     Your Tasks
                   </h2>
                   <div>
                     <button
                       onClick={() => setShowTaskForm(true)}
-                      className="btn btn-primary"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600"
                     >
                       <Plus size={16} />
                       Add Task
@@ -223,12 +156,7 @@ const Dashboard = () => {
 
             {activeTab === 'calendar' && (
               <div>
-                <h2 style={{
-                  fontSize: '24px',
-                  fontWeight: '700',
-                  margin: '0 0 24px 0',
-                  color: '#333'
-                }}>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 dark:text-gray-100">
                   Calendar View
                 </h2>
                 <Calendar />
@@ -237,69 +165,46 @@ const Dashboard = () => {
 
             {activeTab === 'stats' && (
               <div>
-                <h2 style={{
-                  fontSize: '24px',
-                  fontWeight: '700',
-                  margin: '0 0 24px 0',
-                  color: '#333'
-                }}>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 dark:text-gray-100">
                   Task Statistics
                 </h2>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: '20px'
-                }}>
-                  <div style={{
-                    padding: '20px',
-                    background: 'rgba(102, 126, 234, 0.1)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(102, 126, 234, 0.2)'
-                  }}>
-                    <h3 style={{ margin: '0 0 12px 0', color: '#667eea' }}>Total Tasks</h3>
-                    <p style={{ fontSize: '32px', fontWeight: '700', margin: 0, color: '#333' }}>
-                      {tasks.length}
-                    </p>
-                  </div>
-                  <div style={{
-                    padding: '20px',
-                    background: 'rgba(81, 207, 102, 0.1)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(81, 207, 102, 0.2)'
-                  }}>
-                    <h3 style={{ margin: '0 0 12px 0', color: '#51cf66' }}>Completion Rate</h3>
-                    <p style={{ fontSize: '32px', fontWeight: '700', margin: 0, color: '#333' }}>
-                      {tasks.length > 0 ? Math.round((getCompletedTasksCount() / tasks.length) * 100) : 0}%
-                    </p>
-                  </div>
-                </div>
+                <TaskStatistics />
               </div>
             )}
           </div>
         </div>
 
-        {/* Task Form Modal */}
         {showTaskForm && (
           <TaskForm
-            task={editingTask}
+            isOpen={showTaskForm}
             onClose={handleCloseForm}
-            onTaskSaved={handleTaskCreated}
+            onTaskCreated={handleTaskCreated}
+            editingTask={editingTask}
           />
         )}
-        {/* Task Detail Modal */}
+
         {showTaskDetail && (
           <TaskDetailModal
-            task={selectedTaskDetail}
+            isOpen={showTaskDetail}
             onClose={handleCloseTaskDetail}
-            onTaskSaved={() => {
-              handleCloseTaskDetail();
-              fetchTasks();
-            }}
+            task={selectedTaskDetail}
           />
         )}
       </div>
     </div>
   );
 };
+
+const StatCard = ({ title, value, icon, color }) => (
+  <div className="bg-white rounded-lg shadow-md p-6 flex items-center gap-6 dark:bg-gray-800">
+    <div className={`p-3 rounded-full ${color}`}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+      <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
+    </div>
+  </div>
+);
 
 export default Dashboard; 

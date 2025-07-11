@@ -81,58 +81,26 @@ const Register = () => {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      <div className="card" style={{
-        width: '100%',
-        maxWidth: '400px',
-        padding: '40px'
-      }}>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6 dark:bg-gray-800">
         {/* Header */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '32px'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #4f63d2 100%)',
-            borderRadius: '16px',
-            padding: '16px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px'
-          }}>
-            <BookOpen size={32} color="white" />
+        <div className="text-center">
+          <div className="bg-indigo-600 rounded-full p-3 inline-flex items-center justify-center mb-4">
+            <BookOpen size={32} className="text-white" />
           </div>
-          <h1 style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #4f63d2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontSize: '28px',
-            fontWeight: '700',
-            margin: '0 0 8px 0'
-          }}>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
             Join SchoolBag
           </h1>
-          <p style={{
-            color: '#666',
-            fontSize: '16px',
-            margin: 0
-          }}>
+          <p className="text-gray-500 mt-2 dark:text-gray-400">
             Create your account to get started
           </p>
         </div>
 
         {/* Register Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">
-              <User size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+              <User size={16} className="mr-2" />
               Full Name
             </label>
             <input
@@ -140,16 +108,16 @@ const Register = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="form-input"
+              className="mt-1 block w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
               placeholder="Enter your full name"
               autoComplete="name"
             />
-            {errors.name && <div className="error-message">{errors.name}</div>}
+            {errors.name && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              <Mail size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          <div>
+            <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Mail size={16} className="mr-2" />
               Email Address
             </label>
             <input
@@ -157,16 +125,16 @@ const Register = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="form-input"
+              className="mt-1 block w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
               placeholder="Enter your email"
               autoComplete="email"
             />
-            {errors.email && <div className="error-message">{errors.email}</div>}
+            {errors.email && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              <Lock size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          <div>
+            <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Lock size={16} className="mr-2" />
               Password
             </label>
             <input
@@ -174,16 +142,16 @@ const Register = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="form-input"
+              className="mt-1 block w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
               placeholder="Create a password"
               autoComplete="new-password"
             />
-            {errors.password && <div className="error-message">{errors.password}</div>}
+            {errors.password && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.password}</p>}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
-              <Lock size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          <div>
+            <label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Lock size={16} className="mr-2" />
               Confirm Password
             </label>
             <input
@@ -191,21 +159,17 @@ const Register = () => {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="form-input"
+              className="mt-1 block w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400"
               placeholder="Confirm your password"
               autoComplete="new-password"
             />
-            {errors.confirmPassword && <div className="error-message">{errors.confirmPassword}</div>}
+            {errors.confirmPassword && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.confirmPassword}</p>}
           </div>
 
           <button
             type="submit"
-            className="btn btn-primary"
+            className="w-full flex justify-center items-center gap-2 px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600"
             disabled={loading}
-            style={{
-              width: '100%',
-              marginBottom: '20px'
-            }}
           >
             <UserPlus size={16} />
             Create Account
@@ -213,24 +177,12 @@ const Register = () => {
         </form>
 
         {/* Login Link */}
-        <div style={{
-          textAlign: 'center',
-          paddingTop: '20px',
-          borderTop: '1px solid rgba(0, 0, 0, 0.1)'
-        }}>
-          <p style={{
-            color: '#666',
-            fontSize: '14px',
-            margin: 0
-          }}>
+        <div className="text-center pt-6 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
             <Link
               to="/login"
-              style={{
-                color: '#667eea',
-                textDecoration: 'none',
-                fontWeight: '600'
-              }}
+              className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               Sign in here
             </Link>

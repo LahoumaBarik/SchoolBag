@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import Loading from '../common/Loading';
+import { motion } from 'framer-motion';
 
 const TaskList = ({ onEditTask, onViewTask }) => {
   const { tasks, loading, updateTask, deleteTask } = useTask();
@@ -54,23 +55,32 @@ const TaskList = ({ onEditTask, onViewTask }) => {
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return '#ff6b6b';
-      case 'medium': return '#ffd43b';
-      case 'low': return '#51cf66';
-      default: return '#868e96';
-    }
+  const priorityStyles = {
+    high: { 
+      bg: 'bg-red-100 dark:bg-red-900/50', 
+      text: 'text-red-700 dark:text-red-300', 
+      border: 'border-red-500 dark:border-red-400' 
+    },
+    medium: { 
+      bg: 'bg-yellow-100 dark:bg-yellow-900/50', 
+      text: 'text-yellow-700 dark:text-yellow-300', 
+      border: 'border-yellow-500 dark:border-yellow-400' 
+    },
+    low: { 
+      bg: 'bg-green-100 dark:bg-green-900/50', 
+      text: 'text-green-700 dark:text-green-300', 
+      border: 'border-green-500 dark:border-green-400' 
+    },
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle size={20} color="#51cf66" />;
+        return <CheckCircle size={20} className="text-green-500" />;
       case 'in-progress':
-        return <Clock size={20} color="#339af0" />;
+        return <Clock size={20} className="text-blue-500" />;
       default:
-        return <Circle size={20} color="#868e96" />;
+        return <Circle size={20} className="text-gray-400 dark:text-gray-500" />;
     }
   };
 
@@ -86,23 +96,15 @@ const TaskList = ({ onEditTask, onViewTask }) => {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Filters and Sort */}
-      <div style={{
-        display: 'flex',
-        gap: '16px',
-        marginBottom: '24px',
-        flexWrap: 'wrap'
-      }}>
+      <div className="flex flex-wrap items-center gap-4">
         <div>
-          <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', color: '#555' }}>
-            Filter by Status
-          </label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status</label>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="form-select"
-            style={{ minWidth: '150px' }}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
           >
             <option value="all">All Tasks</option>
             <option value="pending">Pending</option>
@@ -110,16 +112,12 @@ const TaskList = ({ onEditTask, onViewTask }) => {
             <option value="completed">Completed</option>
           </select>
         </div>
-
         <div>
-          <label style={{ display: 'block', marginBottom: '4px', fontWeight: '600', color: '#555' }}>
-            Sort by
-          </label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="form-select"
-            style={{ minWidth: '150px' }}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
           >
             <option value="dueDate">Due Date</option>
             <option value="priority">Priority</option>
@@ -130,191 +128,111 @@ const TaskList = ({ onEditTask, onViewTask }) => {
 
       {/* Task List */}
       {filteredTasks.length === 0 ? (
-        <div style={{
-          textAlign: 'center',
-          padding: '40px',
-          color: '#666'
-        }}>
-          <Circle size={48} color="#ddd" style={{ marginBottom: '16px' }} />
-          <h3 style={{ margin: '0 0 8px 0', color: '#888' }}>No tasks found</h3>
-          <p style={{ margin: 0 }}>
-            {filter === 'all' 
-              ? "You don't have any tasks yet. Create your first task!" 
-              : `No tasks with status "${filter}"`
-            }
-          </p>
-        </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="text-center py-16 px-6 bg-white rounded-lg shadow dark:bg-gray-800">
+            <Circle size={48} className="mx-auto text-gray-300 dark:text-gray-600" />
+            <h3 className="mt-4 text-lg font-medium text-gray-800 dark:text-gray-200">No tasks found</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {filter === 'all' 
+                ? "You don't have any tasks yet. Create your first task!" 
+                : `No tasks with status "${filter}"`
+              }
+            </p>
+          </div>
+        </motion.div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gap: '16px'
-        }}>
-          {filteredTasks.map(task => (
-            <div
-              key={task._id}
-              className="card"
-              onClick={() => onViewTask(task)}
-              style={{
-                padding: '20px',
-                position: 'relative',
-                borderLeft: `4px solid ${getPriorityColor(task.priority)}`,
-                ...(isOverdue(task.dueDate, task.status) && {
-                  background: 'rgba(255, 107, 107, 0.05)',
-                  borderColor: '#ff6b6b'
-                })
-              }}
-            >
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'auto 1fr auto',
-                gap: '16px',
-                alignItems: 'start'
-              }}>
-                {/* Status Icon */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const nextStatus = task.status === 'pending' 
-                      ? 'in-progress' 
-                      : task.status === 'in-progress' 
-                        ? 'completed' 
-                        : 'pending';
-                    handleStatusChange(task._id, nextStatus);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    borderRadius: '4px',
-                    transition: 'background 0.2s ease'
-                  }}
-                  title="Click to change status"
-                >
-                  {getStatusIcon(task.status)}
-                </button>
-
-                {/* Task Content */}
-                <div style={{ minWidth: 0 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '8px',
-                    flexWrap: 'wrap'
-                  }}>
-                    <h3 style={{
-                      margin: 0,
-                      fontSize: '18px',
-                      fontWeight: '600',
-                      color: task.status === 'completed' ? '#888' : '#333',
-                      textDecoration: task.status === 'completed' ? 'line-through' : 'none'
-                    }}>
-                      {task.title}
-                    </h3>
-                    
-                    <span style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      background: `${getPriorityColor(task.priority)}20`,
-                      color: getPriorityColor(task.priority)
-                    }}>
-                      {task.priority}
-                    </span>
-
-                    <span className={`type-${task.type}`} style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }}>
-                      {task.type}
-                    </span>
-                  </div>
-
-                  {task.description && (
-                    <p style={{
-                      margin: '0 0 12px 0',
-                      color: '#666',
-                      fontSize: '14px',
-                      lineHeight: '1.5'
-                    }}>
-                      {task.description}
-                    </p>
-                  )}
-
-                  <div style={{
-                    display: 'flex',
-                    gap: '16px',
-                    alignItems: 'center',
-                    fontSize: '14px',
-                    color: '#666',
-                    flexWrap: 'wrap'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Book size={14} />
-                      {task.subject}
+        <motion.div 
+          className="space-y-4"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: { 
+              transition: { 
+                staggerChildren: 0.1 
+              } 
+            }
+          }}
+        >
+          {filteredTasks.map(task => {
+            const priorityStyle = priorityStyles[task.priority] || {};
+            const taskVariants = {
+              hidden: { y: 20, opacity: 0 },
+              visible: { y: 0, opacity: 1 }
+            };
+            return (
+              <motion.div
+                key={task._id}
+                variants={taskVariants}
+                onClick={() => onViewTask(task)}
+                className={`bg-white rounded-lg shadow p-5 cursor-pointer transition-shadow duration-200 hover:shadow-lg border-l-4 ${priorityStyle.border} ${isOverdue(task.dueDate, task.status) ? 'bg-red-50 dark:bg-red-900/20' : 'dark:bg-gray-800'} dark:hover:bg-gray-700/50`}
+              >
+                <div className="flex items-start gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const nextStatus = task.status === 'pending' 
+                        ? 'in-progress' 
+                        : task.status === 'in-progress' 
+                          ? 'completed' 
+                          : 'pending';
+                      handleStatusChange(task._id, nextStatus);
+                    }}
+                    className="p-1 rounded-full hover:bg-gray-100 transition-colors dark:hover:bg-gray-700"
+                    title="Click to change status"
+                  >
+                    {getStatusIcon(task.status)}
+                  </motion.button>
+                  <div className="flex-grow">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
+                      <h3 className={`font-bold text-lg ${task.status === 'completed' ? 'text-gray-500 line-through dark:text-gray-600' : 'text-gray-800 dark:text-gray-100'}`}>
+                        {task.title}
+                      </h3>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${priorityStyle.bg} ${priorityStyle.text}`}>
+                        {task.priority}
+                      </span>
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                        {task.type}
+                      </span>
                     </div>
-                    
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '4px',
-                      color: isOverdue(task.dueDate, task.status) ? '#ff6b6b' : '#666'
-                    }}>
-                      {isOverdue(task.dueDate, task.status) ? (
-                        <AlertCircle size={14} />
-                      ) : (
+                    {task.description && <p className="text-sm text-gray-600 mb-3 dark:text-gray-400">{task.description}</p>}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-1.5">
+                        <Book size={14} />
+                        <span>{task.subject}</span>
+                      </div>
+                      <div className={`flex items-center gap-1.5 ${isOverdue(task.dueDate, task.status) ? 'text-red-600 font-semibold dark:text-red-400' : ''}`}>
                         <Calendar size={14} />
-                      )}
-                      {format(new Date(task.dueDate), 'MMM d, yyyy')} at {task.dueTime}
-                      {isOverdue(task.dueDate, task.status) && (
-                        <span style={{ fontWeight: '600', marginLeft: '4px' }}>
-                          (Overdue)
-                        </span>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <Clock size={14} />
-                      {task.estimatedHours}h estimated
+                        <span>{format(new Date(task.dueDate), 'MMM d, yyyy')}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => { e.stopPropagation(); onEditTask(task); }}
+                      className="p-2 text-gray-500 rounded-md hover:bg-gray-100 hover:text-gray-700 transition-colors dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+                      title="Edit Task"
+                    >
+                      <Edit size={16} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteTask(task._id); }}
+                      className="p-2 text-gray-500 rounded-md hover:bg-red-100 hover:text-red-600 transition-colors dark:text-gray-400 dark:hover:bg-red-900/50 dark:hover:text-red-400"
+                      title="Delete Task"
+                    >
+                      <Trash2 size={16} />
+                    </motion.button>
+                  </div>
                 </div>
-
-                {/* Actions */}
-                <div style={{
-                  display: 'flex',
-                  gap: '8px'
-                }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onEditTask(task); }}
-                    className="btn btn-secondary"
-                    style={{
-                      padding: '8px',
-                      fontSize: '12px'
-                    }}
-                  >
-                    <Edit size={14} />
-                  </button>
-                  
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteTask(task._id); }}
-                    className="btn btn-danger"
-                    style={{
-                      padding: '8px',
-                      fontSize: '12px'
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </motion.div>
+            )
+          })}
+        </motion.div>
       )}
     </div>
   );

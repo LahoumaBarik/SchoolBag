@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
@@ -24,21 +24,18 @@ export const TaskProvider = ({ children }) => {
   const { createNotification } = useNotifications();
 
   // Create axios instance
-  const api = axios.create({
+  const api = useCallback(() => axios.create({
     baseURL: API_BASE_URL || '/api',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  }), [token, API_BASE_URL]);
 
-  useEffect(() => {
-    api.defaults.headers.Authorization = `Bearer ${token}`;
-  }, [token]);
 
   // Fetch all tasks
-  const fetchTasks = async (filters = {}) => {
+  const fetchTasks = useCallback(async (filters = {}) => {
     setLoading(true);
     try {
       const params = new URLSearchParams(filters).toString();
-      const res = await api.get(`/tasks?${params}`);
+      const res = await api().get(`/tasks?${params}`);
       setTasks(res.data.data);
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to fetch tasks';
@@ -47,13 +44,13 @@ export const TaskProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Fetch tasks for calendar
-  const fetchCalendarTasks = async (month, year) => {
+  const fetchCalendarTasks = useCallback(async (month, year) => {
     setLoading(true);
     try {
-      const res = await api.get(`/tasks/calendar?month=${month}&year=${year}`);
+      const res = await api().get(`/tasks/calendar?month=${month}&year=${year}`);
       setCalendarTasks(res.data.data);
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to fetch calendar tasks';
@@ -62,13 +59,13 @@ export const TaskProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Create a new task
-  const createTask = async (taskData) => {
+  const createTask = useCallback(async (taskData) => {
     setLoading(true);
     try {
-      const res = await api.post('/tasks', taskData);
+      const res = await api().post('/tasks', taskData);
       const newTask = res.data.data;
       setTasks(prev => [newTask, ...prev]);
       toast.success('Task created successfully!');
@@ -91,13 +88,13 @@ export const TaskProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, createNotification]);
 
   // Update an existing task
-  const updateTask = async (taskId, taskData) => {
+  const updateTask = useCallback(async (taskId, taskData) => {
     setLoading(true);
     try {
-      const res = await api.put(`/tasks/${taskId}`, taskData);
+      const res = await api().put(`/tasks/${taskId}`, taskData);
       const updatedTask = res.data.data;
       setTasks(prev => prev.map(task => task._id === taskId ? updatedTask : task));
       toast.success('Task updated successfully!');
@@ -120,13 +117,13 @@ export const TaskProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, createNotification]);
 
   // Delete a task
-  const deleteTask = async (taskId) => {
+  const deleteTask = useCallback(async (taskId) => {
     setLoading(true);
     try {
-      await api.delete(`/tasks/${taskId}`);
+      await api().delete(`/tasks/${taskId}`);
       setTasks(prev => prev.filter(task => task._id !== taskId));
       toast.success('Task deleted successfully!');
       return { success: true };
@@ -138,7 +135,7 @@ export const TaskProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   const value = {
     tasks,

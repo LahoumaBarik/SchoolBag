@@ -1,12 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { AuthProvider } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 import Home from './components/home/Home';
 import Login from './components/auth/Login';
@@ -39,18 +41,34 @@ const PublicRoute = ({ children }) => {
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  const pageVariants = {
+    initial: { opacity: 0, y: 20 },
+    in: { opacity: 1, y: 0 },
+    out: { opacity: 0, y: -20 }
+  };
+
+  const pageTransition = {
+    type: 'tween',
+    ease: 'anticipate',
+    duration: 0.5
+  };
 
   return (
     <div className="App">
       {isAuthenticated && <Navbar />}
       
-      <Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
         {/* Public Routes */}
         <Route
           path="/"
           element={
             <PublicRoute>
+                <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
               <Home />
+                </motion.div>
             </PublicRoute>
           }
         />
@@ -58,7 +76,9 @@ function AppContent() {
           path="/login"
           element={
             <PublicRoute>
+                <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
               <Login />
+                </motion.div>
             </PublicRoute>
           }
         />
@@ -66,7 +86,9 @@ function AppContent() {
           path="/register"
           element={
             <PublicRoute>
+                <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
               <Register />
+                </motion.div>
             </PublicRoute>
           }
         />
@@ -76,7 +98,9 @@ function AppContent() {
           path="/dashboard"
           element={
             <ProtectedRoute>
+                <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
               <Dashboard />
+                </motion.div>
             </ProtectedRoute>
           }
         />
@@ -84,6 +108,7 @@ function AppContent() {
         {/* Default redirects */}
         <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} />} />
       </Routes>
+      </AnimatePresence>
       
       <ToastContainer
         position="top-right"
@@ -104,6 +129,7 @@ function AppContent() {
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <NotificationProvider>
         <TaskProvider>
@@ -113,6 +139,7 @@ function App() {
         </TaskProvider>
       </NotificationProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 
